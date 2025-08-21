@@ -1,6 +1,6 @@
 # 🛠️ UntKAFSFuncoes
 
-Biblioteca de utilitários para aplicações Delphi/FireMonkey com funções multiplataforma.
+Unit Delphi/FireMonkey com funções utilitárias multiplataforma para Windows e Android.
 
 ## 📋 Descrição
 
