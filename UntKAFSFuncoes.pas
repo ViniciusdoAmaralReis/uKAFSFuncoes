@@ -8,13 +8,13 @@ uses
   System.SysUtils, System.Types,
   FMX.Forms, FMX.Graphics,
   IdIPWatch
-{$IFDEF MSWINDOWS}
+  {$IFDEF MSWINDOWS}
   , Winapi.ShellAPI, Winapi.Windows
-{$ENDIF}
-{$IFDEF ANDROID}
+  {$ENDIF}
+  {$IFDEF ANDROID}
   , Androidapi.Helpers, Androidapi.JNI.GraphicsContentViewText,
   Androidapi.JNI.Os, Androidapi.JNIBridge
-{$ENDIF}
+  {$ENDIF}
   ;
 
   function NomeProjeto: String;
@@ -46,11 +46,11 @@ end;
 procedure AbrirNavegador(const _url: String);
 begin
   // Abre o navegador padrão do sistema
-{$IFDEF MSWINDOWS}
+  {$IFDEF MSWINDOWS}
   ShellExecute(0, 'open', PChar(_url), nil, nil, SW_SHOWNORMAL);
-{$ENDIF}
+  {$ENDIF}
 
-{$IFDEF ANDROID}
+  {$IFDEF ANDROID}
   // Converte a string URL para Uri Java
   var Uri := StrToJURI(_url);
 
@@ -59,15 +59,15 @@ begin
 
   // Abre o navegador
   TAndroidHelper.Activity.startActivity(Intent);
-{$ENDIF}
+  {$ENDIF}
 end;
 
 procedure Vibrar;
 begin
-{$IFDEF ANDROID}
-    var _vibrar := TJVibrator.Wrap((SharedActivityContext.getSystemService(tjcontext.JavaClass.VIBRATOR_SERVICE) as ILocalObject).GetObjectID);
-    _vibrar.vibrate(25);
-{$ENDIF}
+  {$IFDEF ANDROID}
+  var _vibrar := TJVibrator.Wrap((SharedActivityContext.getSystemService(tjcontext.JavaClass.VIBRATOR_SERVICE) as ILocalObject).GetObjectID);
+  _vibrar.vibrate(25);
+  {$ENDIF}
 end;
 function BarraProgresso(const _valor, _total, _barra: Single): Single;
 begin
