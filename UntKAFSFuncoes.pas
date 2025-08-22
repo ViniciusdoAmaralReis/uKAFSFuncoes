@@ -40,7 +40,7 @@ begin
 end;
 function ResolucaoNativa: TPoint;
 begin
-  Result := TPoint.Create(Round(Screen.DesktopWidth), Round(Screen.DesktopHeight));
+  Result := TPoint.Create(Round(Screen.Size.Width), Round(Screen.Size.Height));
 end;
 
 procedure AbrirNavegador(const _url: String);
