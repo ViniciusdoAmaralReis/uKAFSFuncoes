@@ -6,7 +6,7 @@ uses
   System.Classes, System.IniFiles, System.IOUtils, System.Net.HttpClient,
   System.Net.HttpClientComponent, System.Net.URLClient, System.NetEncoding,
   System.SysUtils, System.Types,
-  FMX.Forms, FMX.Graphics,
+  FMX.Forms, FMX.Graphics, FMX.Platform,
   IdIPWatch
   {$IFDEF MSWINDOWS}
   , Winapi.ShellAPI, Winapi.Windows
@@ -40,7 +40,24 @@ begin
 end;
 function ResolucaoNativa: TPoint;
 begin
-  Result := TPoint.Create(Round(Screen.Size.Width), Round(Screen.Size.Height));
+  var ScreenService: IFMXScreenService;
+
+  // Tenta obter o serviço de tela
+  if TPlatformServices.Current.SupportsPlatformService(IFMXScreenService, ScreenService) then
+  begin
+    Result := TPoint.Create(
+      Round(ScreenService.GetScreenSize.X),
+      Round(ScreenService.GetScreenSize.Y)
+    );
+  end
+  else
+  begin
+    // Fallback para Screen.Size
+    Result := TPoint.Create(
+      Round(Screen.Size.Width),
+      Round(Screen.Size.Height)
+    );
+  end;
 end;
 
 procedure AbrirNavegador(const _url: String);
