@@ -1,4 +1,4 @@
-# 🛠️ UntKAFSFuncoes
+# 🛠️ uKAFSFuncoes
 
 Unit Delphi/FireMonkey com funções utilitárias multiplataforma para Windows e Android.
 
