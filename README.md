@@ -1,6 +1,6 @@
 # 🧩 uKAFSFuncoes
 
-Biblioteca de funções utilitárias para Delphi/FireMonkey com suporte multiplataforma para Windows e Android.
+Biblioteca Delphi/FireMonkey de funções utilitárias com suporte multiplataforma para Windows e Android.
 
 ## 💡 Funcionalidades
 ```pascal
