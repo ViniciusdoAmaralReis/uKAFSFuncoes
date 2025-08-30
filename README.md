@@ -1,127 +1,37 @@
-# 🛠️ uKAFSFuncoes
+# 🧩 uKAFSFuncoes
 
-Unit Delphi/FireMonkey com funções utilitárias multiplataforma para Windows e Android.
+Biblioteca de funções utilitárias para Delphi/FireMonkey com suporte multiplataforma para Windows e Android.
 
-## 📋 Descrição
-
-Unit contendo diversas funções utilitárias para desenvolvimento em Delphi/FireMonkey, com suporte para Windows e Android, incluindo manipulação de arquivos, rede, imagens e recursos do sistema.
-
-## ✨ Características
-
-- ✅ Funções multiplataforma (Windows e Android)
-- ✅ Manipulação de arquivos INI com codificação
-- ✅ Operações de rede (IP local e internet)
-- ✅ Manipulação de imagens (cache, URL, Base64)
-- ✅ Controle de vibração (Android)
-- ✅ Abertura de navegador padrão
-- ✅ Codificação/decodificação Base64 segura
-
-## 🧩 Funções Disponíveis
-
-### 🔧 Utilitários do Sistema
-| Função | Descrição |
-|--------|-----------|
-| `NomeProjeto` | Retorna o nome do executável sem extensão |
-| `ResolucaoNativa` | Retorna a resolução nativa da tela |
-| `Vibrar` | Ativa vibração do dispositivo (Android) |
-
-### 🌐 Funções de Rede
-| Função | Descrição |
-|--------|-----------|
-| `AbrirNavegador` | Abre URL no navegador padrão |
-| `IPlocal` | Retorna o IP local da máquina |
-| `IPInternet` | Retorna o IP público da internet |
-
-### 💾 Manipulação de Arquivos
-| Função | Descrição |
-|--------|-----------|
-| `SalvarIni` | Salva valor codificado em arquivo INI |
-| `LerIni` | Lê valor decodificado de arquivo INI |
-| `Codificar` | Codifica texto em Base64 seguro |
-| `Decodificar` | Decodifica texto de Base64 seguro |
-
-### 🖼️ Manipulação de Imagens
-| Função | Descrição |
-|--------|-----------|
-| `CacheParaBmp` | Carrega bitmap de recursos embutidos |
-| `URLParaBmp` | Baixa e carrega bitmap de URL |
-| `Base64ParaBmp` | Converte string Base64 para bitmap |
-
-### 📊 Utilitários
-| Função | Descrição |
-|--------|-----------|
-| `BarraProgresso` | Calcula progresso para barras de carregamento |
-
-## 🛠️ Como Usar
-
-### Exemplo Básico
+## 💡 Funcionalidades
 ```pascal
-uses UntKAFSFuncoes;
-
-// Salvar configuração
-SalvarIni('config', 'conexao', 'servidor', '192.168.1.100');
-
-// Ler configuração
-var Servidor := LerIni('config', 'conexao', 'servidor');
-
-// Abrir navegador
-AbrirNavegador('https://www.google.com');
-
-// Obter IP público
-var MeuIP := IPInternet;
+function NomeProjeto: String; 
+function ResolucaoNativa: TPoint; 
+procedure AbrirNavegador(const _url: String); 
+procedure Vibrar; // Android apenas
+function BarraProgresso(const _valor, _total, _barra: Single): Single; 
+function Codificar(const _texto: String): String; 
+function Decodificar(const _texto: String): String; 
+procedure SalvarIni(const _arquivo, _secao, _campo, _valor: String);
+function LerIni(const _arquivo, _secao, _campo: String): String;
+function IPlocal: String; // Windows apenas
+function IPInternet: String; 
+function CacheParaBmp(const _nome: String): TBitmap; 
+function URLParaBmp(const _url: String): TBitmap; 
+function Base64ParaBmp(const _img: String): TBitmap; 
 ```
 
-### Manipulação de Imagens
-```pascal
-// Carregar imagem de recurso
-var Bmp1 := CacheParaBmp('IMAGEM_EMBUTIDA');
+## 🏛️ Status de compatibilidade
 
-// Baixar imagem da web
-var Bmp2 := URLParaBmp('https://exemplo.com/imagem.jpg');
+| Sistema operacional | Status               | Observações                           |
+|-----------------|----------------------|---------------------------------------|
+| **Windows**     | ✅ **Parcial**       | ❌ Vibrar                            |
+| **Android**     | ✅ **Parcial**       | ❌ IPlocal                           |
+| **Linux/macOS** | ❌ **Não testado**   | Limitações nas funções específicas   |
 
-// Converter Base64 para bitmap
-var Bmp3 := Base64ParaBmp('data:image/png;base64,...');
-```
-
-## 📁 Estrutura de Arquivos
-
-Os arquivos INI são salvos em:
-```
-Documents/NomeDoProjeto/arquivo.ini
-```
-
-### Formato dos Dados
-Os valores são codificados em Base64 modificado:
-- `+` → `-`
-- `/` → `!`
-- `=` → `$`
-
-## 🌍 Suporte Multiplataforma
-
-### Windows
-- ✅ ShellExecute para abrir navegador
-- ✅ TIdIPWatch para IP local
-- ✅ Recursos nativos do Windows
-
-### Android
-- ✅ Intent para abrir navegador
-- ✅ Vibrator service para vibração
-- ✅ Contexto de atividade Android
-
-## ⚙️ Dependências
-
-- `System.Classes`
-- `System.IniFiles`
-- `System.IOUtils`
-- `System.Net.HttpClient`
-- `System.Net.URLClient`
-- `System.NetEncoding`
-- `System.SysUtils`
-- `System.Types`
-- `FMX.Forms`
-- `FMX.Graphics`
-- `IdIPWatch`
+| IDE             | Versão mínima       | Observações                           |
+|-----------------|---------------------|---------------------------------------|
+| **Delphi**      | ✅ **10.4**         | Suporte a multiplataforma FireMonkey  |
 
 ---
 
-**Nota:** Esta unit requer a componente Indy para `TIdIPWatch` nas plataformas Windows.
+**Nota**: Esta unit é parte do ecossistema KAFS e fornece funcionalidades utilitárias essenciais para aplicações Delphi multiplataforma. Algumas funções possuem implementações específicas por plataforma (Windows/Android).
