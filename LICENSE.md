@@ -18,7 +18,7 @@
 
 ### Additional Terms for uKAFSFuncoes:
 
-The copyright holder of KAFSServidorDataSnap offers commercial licensing
+The copyright holder of uKAFSFuncoes offers commercial licensing
 for organizations that wish to use this software in proprietary applications
 without releasing their source code under the GPL v3.
 
