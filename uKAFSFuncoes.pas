@@ -26,8 +26,8 @@ uses
   function Decodificar(const _texto: String): String;
   procedure SalvarIni(const _arquivo: String; _secao, _campo, _valor: String);
   function LerIni(const _arquivo: String; _secao, _campo: String): String;
-  function IPlocal: String;
-  function IPInternet: String;
+  function IPPrivado: String;
+  function IPPublico: String;
   function CacheParaBmp(const _nome: String): FMX.Graphics.TBitmap;
   function URLParaBmp(const _url: String): FMX.Graphics.TBitmap;
   function Base64ParaBmp(const _img: String): FMX.Graphics.TBitmap;
@@ -161,7 +161,7 @@ begin
   end;
 end;
 
-function IPlocal: String;
+function IPPrivado: String;
 begin
   {$IFDEF MSWINDOWS}
   var _ipwatch := TIdIPWatch.Create(nil);
@@ -172,7 +172,7 @@ begin
   end;
   {$ENDIF}
 end;
-function IPInternet: String;
+function IPPublico: String;
 begin
   Result := '';
 
