@@ -6,8 +6,10 @@ uses
   System.Classes, System.IniFiles, System.IOUtils, System.Net.HttpClient,
   System.Net.HttpClientComponent, System.Net.URLClient, System.NetEncoding,
   System.SysUtils, System.Types,
-  FMX.Forms, FMX.Graphics, FMX.Platform,
-  IdIPWatch
+  IdIPWatch, IdStack
+  {$IFDEF FMX}
+  , FMX.Forms, FMX.Graphics, FMX.Platform
+  {$ENDIF}
   {$IFDEF MSWINDOWS}
   , Winapi.ShellAPI, Winapi.Windows
   {$ENDIF}
@@ -18,9 +20,14 @@ uses
   ;
 
   function NomeProjeto: String;
+  {$IFDEF FMX}
   function ResolucaoNativa: TPoint;
   procedure AbrirNavegador(const _url: String);
   procedure Vibrar;
+  function CacheParaBmp(const _nome: String): FMX.Graphics.TBitmap;
+  function URLParaBmp(const _url: String): FMX.Graphics.TBitmap;
+  function Base64ParaBmp(const _img: String): FMX.Graphics.TBitmap;
+  {$ENDIF}
   function BarraProgresso(const _valor, _total, _barra: Single): Single;
   function Codificar(const _texto: String): String;
   function Decodificar(const _texto: String): String;
@@ -28,9 +35,6 @@ uses
   function LerIni(const _arquivo: String; _secao, _campo: String): String;
   function IPPrivado: String;
   function IPPublico: String;
-  function CacheParaBmp(const _nome: String): FMX.Graphics.TBitmap;
-  function URLParaBmp(const _url: String): FMX.Graphics.TBitmap;
-  function Base64ParaBmp(const _img: String): FMX.Graphics.TBitmap;
 
 implementation
 
@@ -38,6 +42,8 @@ function NomeProjeto: String;
 begin
   Result := TPath.GetFileNameWithoutExtension(ParamStr(0));
 end;
+
+{$IFDEF FMX}
 function ResolucaoNativa: TPoint;
 begin
   var ScreenService: IFMXScreenService;
@@ -86,6 +92,65 @@ begin
   _vibrar.vibrate(25);
   {$ENDIF}
 end;
+
+function CacheParaBmp(const _nome: String): FMX.Graphics.TBitmap;
+begin
+  // Carrega recurso embutido no sistema
+  var _stream := TResourceStream.Create(HInstance, _nome, RT_RCDATA);
+  try
+
+    Result := FMX.Graphics.TBitmap.Create;
+    Result.LoadFromStream(_stream);
+
+  finally
+    FreeAndNil(_stream);
+  end;
+end;
+function URLParaBmp(const _url: String): FMX.Graphics.TBitmap;
+begin
+  Result := nil;
+
+  var _httpclient := THTTPClient.Create;
+  var _stream := TMemoryStream.Create;
+  try
+
+    // Baixa a imagem da URL
+    _httpclient.Get(_url, _stream);
+    _stream.Position := 0;
+
+    // Cria e carrega o bitmap
+    Result := FMX.Graphics.TBitmap.Create;
+    Result.LoadFromStream(_stream);
+
+  finally
+    FreeAndNil(_stream);
+    FreeAndNil(_httpclient);
+  end;
+end;
+function Base64ParaBmp(const _img: String): FMX.Graphics.TBitmap;
+begin
+  Result := FMX.Graphics.TBitmap.Create;
+
+  var _inputstream := TStringStream.Create(_img);
+  var _outputstream := TMemoryStream.Create;
+  try
+
+    // Decodifica Base64 para stream binário
+    TNetEncoding.Base64.Decode(_inputstream, _outputstream);
+
+    // Volta ao início do stream para leitura
+    _outputstream.Position := 0;
+
+    // Carrega o bitmap a partir do stream
+    Result.LoadFromStream(_outputstream);
+
+  finally
+    FreeAndNil(_inputstream);
+    FreeAndNil(_outputstream);
+  end;
+end;
+{$ENDIF}
+
 function BarraProgresso(const _valor, _total, _barra: Single): Single;
 begin
   // Calcula o valor do progresso
@@ -100,11 +165,13 @@ function Codificar(const _texto: String): String;
 begin
   var Base64 := TBase64Encoding.Create(0, ''); // 0 = Sem quebra de linha
   try
+
     // Substitui caracteres especiais para arquivos INI
     Result := Base64.Encode(_texto)
       .Replace('+', '-')
       .Replace('/', '!')
       .Replace('=', '$');
+
   finally
     FreeAndNil(Base64);
   end;
@@ -133,7 +200,9 @@ begin
   // Cria e salva o arquivo INI
   var _ini := TIniFile.Create(System.IOUtils.TPath.Combine(_caminho, _arquivo + '.ini'));
   try
+
     _ini.WriteString(_secao, _campo, _valor);
+
   finally
     FreeAndNil(_ini);
   end;
@@ -152,10 +221,13 @@ begin
   // Cria e lê o arquivo INI
   var _ini := TIniFile.Create(System.IOUtils.TPath.Combine(_caminho, _arquivo + '.ini'));
   try
+
     var _valor := _ini.ReadString(_secao, _campo, '');
+
     // Decodifica caso não seja vazio
     if _valor <> '' then
       Result := Decodificar(_valor);
+
   finally
     FreeAndNil(_ini);
   end;
@@ -166,9 +238,26 @@ begin
   {$IFDEF MSWINDOWS}
   var _ipwatch := TIdIPWatch.Create(nil);
   try
+
     Result := _ipwatch.LocalIP;
+
   finally
     FreeAndNil(_ipwatch);
+  end;
+  {$ENDIF}
+
+  {$IFDEF LINUX}
+  Result := '';
+  try
+
+    var Stack := GStack;
+    Result := Stack.LocalAddress;
+
+    if (Result = '127.0.0.1') or (Result = '::1') then
+      Result := '';
+
+  except
+    Result := '';
   end;
   {$ENDIF}
 end;
@@ -178,65 +267,16 @@ begin
 
   var _httpclient := TNetHTTPClient.Create(nil);
   try
+
     // O código para até receber a resposta
     _httpclient.Asynchronous := False;
 
     var Response := _httpclient.Get('http://api.ipify.org');
     if Response.StatusCode = 200 then
       Result := Response.ContentAsString;
+
   finally
     FreeAndNil(_httpclient);
-  end;
-end;
-
-function CacheParaBmp(const _nome: String): FMX.Graphics.TBitmap;
-begin
-  // Carrega recurso embutido no sistema
-  var _stream := TResourceStream.Create(HInstance, _nome, RT_RCDATA);
-  try
-    Result := FMX.Graphics.TBitmap.Create;
-    Result.LoadFromStream(_stream);
-  finally
-    FreeAndNil(_stream);
-  end;
-end;
-function URLParaBmp(const _url: String): FMX.Graphics.TBitmap;
-begin
-  Result := nil;
-
-  var _httpclient := THTTPClient.Create;
-  var _stream := TMemoryStream.Create;
-  try
-    // Baixa a imagem da URL
-    _httpclient.Get(_url, _stream);
-    _stream.Position := 0;
-
-    // Cria e carrega o bitmap
-    Result := FMX.Graphics.TBitmap.Create;
-    Result.LoadFromStream(_stream);
-  finally
-    FreeAndNil(_stream);
-    FreeAndNil(_httpclient);
-  end;
-end;
-function Base64ParaBmp(const _img: String): FMX.Graphics.TBitmap;
-begin
-  Result := FMX.Graphics.TBitmap.Create;
-
-  var _inputstream := TStringStream.Create(_img);
-  var _outputstream := TMemoryStream.Create;
-  try
-    // Decodifica Base64 para stream binário
-    TNetEncoding.Base64.Decode(_inputstream, _outputstream);
-
-    // Volta ao início do stream para leitura
-    _outputstream.Position := 0;
-
-    // Carrega o bitmap a partir do stream
-    Result.LoadFromStream(_outputstream);
-  finally
-    FreeAndNil(_inputstream);
-    FreeAndNil(_outputstream);
   end;
 end;
 
