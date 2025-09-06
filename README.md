@@ -22,7 +22,7 @@ Biblioteca Delphi/FireMonkey de funções utilitárias com suporte multiplatafor
 
 ## 🏛️ Status de compatibilidade
 
-| Funções         | Terminal | FMX | Windows |  Linux  | Android |
+| Função          | Terminal | FMX | Windows |  Linux  | Android |
 |-----------------|----------|-----|---------|---------|---------|
 | NomeProjeto     | ✅       | ✅  | ✅     | ✅      | ✅      |
 | ResolucaoNativa | ❌       | ✅  | ✅     | ✅      | ✅      |
