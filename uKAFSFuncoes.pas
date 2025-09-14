@@ -192,8 +192,8 @@ begin
   _campo := Codificar(_campo);
   _valor := Codificar(_valor);
 
-  // Determina o caminho de documentos e cria uma pasta caso não exista
-  var _caminho := System.IOUtils.TPath.GetDocumentsPath + PathDelim + NomeProjeto;
+  // Determina o caminho e cria uma pasta caso não exista
+  var _caminho := ExtractFilePath(ParamStr(0));
   if not TDirectory.Exists(_caminho) then
     ForceDirectories(_caminho);
 
@@ -216,7 +216,7 @@ begin
   _campo := Codificar(_campo);
 
   // Determina o caminho de documentos e sua pasta
-  var _caminho := System.IOUtils.TPath.GetDocumentsPath + PathDelim + NomeProjeto;
+  var _caminho := ExtractFilePath(ParamStr(0));
 
   // Cria e lê o arquivo INI
   var _ini := TIniFile.Create(System.IOUtils.TPath.Combine(_caminho, _arquivo + '.ini'));
