@@ -7,8 +7,8 @@ uses
   System.Net.HttpClientComponent, System.Net.URLClient, System.NetEncoding,
   System.SysUtils, System.Types,
   IdIPWatch, IdStack
-  {$IFDEF FMX}
-  , FMX.Forms, FMX.Graphics, FMX.Platform
+  {$IF DEFINED(FMX) OR DEFINED(SKIA)}
+  , FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Platform
   {$ENDIF}
   {$IFDEF MSWINDOWS}
   , Winapi.ShellAPI, Winapi.Windows
@@ -20,8 +20,9 @@ uses
   ;
 
   function NomeProjeto: String;
-  {$IFDEF FMX}
+  {$IF DEFINED(FMX) OR DEFINED(SKIA)}
   function ResolucaoNativa: TPoint;
+  function ComponenteRectF(const _componente: TControl): TRectF;
   procedure AbrirNavegador(const _url: String);
   procedure Vibrar;
   function CacheParaBmp(const _nome: String): FMX.Graphics.TBitmap;
@@ -43,7 +44,7 @@ begin
   Result := TPath.GetFileNameWithoutExtension(ParamStr(0));
 end;
 
-{$IFDEF FMX}
+{$IF DEFINED(FMX) OR DEFINED(SKIA)}
 function ResolucaoNativa: TPoint;
 begin
   var ScreenService: IFMXScreenService;
@@ -53,17 +54,22 @@ begin
   begin
     Result := TPoint.Create(
       Round(ScreenService.GetScreenSize.X),
-      Round(ScreenService.GetScreenSize.Y)
-    );
+      Round(ScreenService.GetScreenSize.Y));
   end
   else
   begin
     // Fallback para Screen.Size
     Result := TPoint.Create(
       Round(Screen.Size.Width),
-      Round(Screen.Size.Height)
-    );
+      Round(Screen.Size.Height));
   end;
+end;
+function ComponenteRectF(const _componente: TControl): TRectF;
+begin
+  Result := RectF(_componente.Position.X,
+                  _componente.Position.Y,
+                  _componente.Position.X + _componente.Width,
+                  _componente.Position.Y + _componente.Height);
 end;
 
 procedure AbrirNavegador(const _url: String);
@@ -98,10 +104,8 @@ begin
   // Carrega recurso embutido no sistema
   var _stream := TResourceStream.Create(HInstance, _nome, RT_RCDATA);
   try
-
     Result := FMX.Graphics.TBitmap.Create;
     Result.LoadFromStream(_stream);
-
   finally
     FreeAndNil(_stream);
   end;
@@ -113,7 +117,6 @@ begin
   var _httpclient := THTTPClient.Create;
   var _stream := TMemoryStream.Create;
   try
-
     // Baixa a imagem da URL
     _httpclient.Get(_url, _stream);
     _stream.Position := 0;
@@ -121,7 +124,6 @@ begin
     // Cria e carrega o bitmap
     Result := FMX.Graphics.TBitmap.Create;
     Result.LoadFromStream(_stream);
-
   finally
     FreeAndNil(_stream);
     FreeAndNil(_httpclient);
@@ -134,7 +136,6 @@ begin
   var _inputstream := TStringStream.Create(_img);
   var _outputstream := TMemoryStream.Create;
   try
-
     // Decodifica Base64 para stream binário
     TNetEncoding.Base64.Decode(_inputstream, _outputstream);
 
@@ -143,7 +144,6 @@ begin
 
     // Carrega o bitmap a partir do stream
     Result.LoadFromStream(_outputstream);
-
   finally
     FreeAndNil(_inputstream);
     FreeAndNil(_outputstream);
@@ -165,13 +165,11 @@ function Codificar(const _texto: String): String;
 begin
   var Base64 := TBase64Encoding.Create(0, ''); // 0 = Sem quebra de linha
   try
-
     // Substitui caracteres especiais para arquivos INI
     Result := Base64.Encode(_texto)
       .Replace('+', '-')
       .Replace('/', '!')
       .Replace('=', '$');
-
   finally
     FreeAndNil(Base64);
   end;
@@ -200,9 +198,7 @@ begin
   // Cria e salva o arquivo INI
   var _ini := TIniFile.Create(System.IOUtils.TPath.Combine(_caminho, _arquivo + '.ini'));
   try
-
     _ini.WriteString(_secao, _campo, _valor);
-
   finally
     FreeAndNil(_ini);
   end;
@@ -221,13 +217,11 @@ begin
   // Cria e lê o arquivo INI
   var _ini := TIniFile.Create(System.IOUtils.TPath.Combine(_caminho, _arquivo + '.ini'));
   try
-
     var _valor := _ini.ReadString(_secao, _campo, '');
 
     // Decodifica caso não seja vazio
     if _valor <> '' then
       Result := Decodificar(_valor);
-
   finally
     FreeAndNil(_ini);
   end;
@@ -238,9 +232,7 @@ begin
   {$IFDEF MSWINDOWS}
   var _ipwatch := TIdIPWatch.Create(nil);
   try
-
     Result := _ipwatch.LocalIP;
-
   finally
     FreeAndNil(_ipwatch);
   end;
@@ -249,13 +241,11 @@ begin
   {$IFDEF LINUX}
   Result := '';
   try
-
     var Stack := GStack;
     Result := Stack.LocalAddress;
 
     if (Result = '127.0.0.1') or (Result = '::1') then
       Result := '';
-
   except
     Result := '';
   end;
@@ -267,14 +257,12 @@ begin
 
   var _httpclient := TNetHTTPClient.Create(nil);
   try
-
     // O código para até receber a resposta
     _httpclient.Asynchronous := False;
 
     var Response := _httpclient.Get('http://api.ipify.org');
     if Response.StatusCode = 200 then
       Result := Response.ContentAsString;
-
   finally
     FreeAndNil(_httpclient);
   end;
