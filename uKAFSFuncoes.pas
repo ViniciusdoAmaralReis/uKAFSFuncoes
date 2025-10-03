@@ -5,7 +5,7 @@ interface
 uses
   System.Classes, System.IniFiles, System.IOUtils, System.Math,
   System.Net.HttpClient, System.Net.HttpClientComponent, System.Net.URLClient,
-  System.NetEncoding, System.SysUtils, System.Types,
+  System.NetEncoding, System.SysUtils, System.Threading, System.Types,
   IdIPWatch, IdStack
   {$IFNDEF CONSOLE}
   , FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Platform
@@ -22,19 +22,16 @@ uses
   function NomeProjeto: String;
   {$IFNDEF CONSOLE}
   function ResolucaoNativa: TPoint;
-  function ComponenteRectF(const _componente: TControl): TRectF;
-  function PontoCentral(_componente: TControl): TPointF;
-  function Colisao(_rect1, _rect2: TRectF): Boolean;
-  function AnguloRotacao(const _componente: TControl; const _alvoX, _alvoY: Single): Single;
-  function Distancia(const _componente1, _component2: TControl): Single;
+  function AnguloRotacao(const _centroorigem, _centroalvo: TPointF): Single;
+  function Distancia(const _centroorigem, _centroalvo: TPointF): Single;
   procedure AbrirNavegador(const _url: String);
-  procedure Vibrar;
-  function CacheParaBmp(const _nome: String): FMX.Graphics.TBitmap;
+  procedure Vibrar(const _duracao: Int64);
+  function RecursoParaBmp(const _recurso: String): FMX.Graphics.TBitmap;
   function URLParaBmp(const _url: String): FMX.Graphics.TBitmap;
   function Base64ParaBmp(const _img: String): FMX.Graphics.TBitmap;
   {$ENDIF}
-  function VelocidadeParaDuracao(const _velociade: Single; const _inicioX, _inicioY, _fimX, _fimY: Single): Single;
-  function BarraProgresso(const _valor, _total, _barra: Single): Single;
+  function VelocidadeParaDuracao(_velocidade: Single; const _inicio, _fim: TPointF): Single;
+  function ProgressoBarra(_progresso: Single; const _total, _tamanhobarra: Single): Single;
   function TextoParaBase64(const _texto: String): String;
   function Base64ParaTexto(const _base64: String): String;
   procedure SalvarIni(const _arquivo: String; _secao, _campo, _valor: String);
@@ -69,41 +66,16 @@ begin
       Round(Screen.Size.Height));
   end;
 end;
-// Verificar, trocar TCOntrol por posições somente
-function ComponenteRectF(const _componente: TControl): TRectF;
-begin
-  Result := RectF(_componente.Position.X,
-                  _componente.Position.Y,
-                  _componente.Position.X + _componente.Width,
-                  _componente.Position.Y + _componente.Height);
-end;
-function PontoCentral(_componente: TControl): TPointF;
-begin
-  Result := TPointF.Create(_componente.Position.X + (_componente.Width / 2), _componente.Position.Y + (_componente.Height / 2));
-end;
-function Colisao(_rect1, _rect2: TRectF): Boolean;
-begin
-  Result := _rect1.IntersectsWith(_rect2);
-  //Result := _componente1.BoundsRect.IntersectsWith(_componente2.BoundsRect);
-end;
-function AnguloRotacao(const _componente: TControl; const _alvoX, _alvoY: Single): Single;
-begin
-  var _centrocomponente := PontoCentral(_componente);
-  var _angulo := ArcTan2(_alvoY - _centrocomponente.Y, _alvoX - _centrocomponente.X);
 
-  _angulo := _angulo * (180 / Pi) + 90; // +90 para frente apontar para destino
-
-  Result := _angulo;
-end;
-function Distancia(const _componente1, _component2: TControl): Single;
+function AnguloRotacao(const _centroorigem, _centroalvo: TPointF): Single;
 begin
-  var CentroA := PontoCentral(_componente1);
-  var CentroB := PontoCentral(_component2);
+  var AnguloRad := ArcTan2(_centroalvo.Y - _centroorigem.Y, _centroalvo.X - _centroorigem.X);
 
-  var DeltaX := CentroB.X - CentroA.X;
-  var DeltaY := CentroB.Y - CentroA.Y;
-
-  Result := Sqrt(DeltaX * DeltaX + DeltaY * DeltaY);
+  Result := AnguloRad * (180 / Pi) + 90;
+end;
+function Distancia(const _centroorigem, _centroalvo: TPointF): Single;
+begin
+  Result := Sqrt(Sqr(_centroalvo.X - _centroorigem.X) + Sqr(_centroalvo.Y - _centroorigem.Y));
 end;
 
 procedure AbrirNavegador(const _url: String);
@@ -127,25 +99,64 @@ begin
   // Abre o navegador
   TAndroidHelper.Activity.startActivity(Intent);
   {$ENDIF}
-end;
 
-procedure Vibrar;
+  {$IFDEF IOS}
+  // Para iOS - usa SharedApplication
+  var URL := TNSURL.Wrap(TNSURL.OCClass.URLWithString(StrToNSStr(_url)));
+  if SharedApplication.canOpenURL(URL) then
+    SharedApplication.openURL(URL);
+  {$ENDIF}
+
+  {$IFDEF MACOS}
+  // Para macOS - usa openURL
+  var Workspace := TNSWorkspace.Wrap(TNSWorkspace.OCClass.sharedWorkspace);
+  var URL := TNSURL.Wrap(TNSURL.OCClass.URLWithString(StrToNSStr(_url)));
+  Workspace.openURL(URL);
+  {$ENDIF}
+end;
+procedure Vibrar(const _duracao: Int64);
 begin
   {$IFDEF ANDROID}
-  var _vibrar := TJVibrator.Wrap((SharedActivityContext.getSystemService(tjcontext.JavaClass.VIBRATOR_SERVICE) as ILocalObject).GetObjectID);
-  _vibrar.vibrate(25);
+  try
+    // Verifica se o dispositivo suporta vibração
+    var VibratorService := SharedActivityContext.getSystemService(TJContext.JavaClass.VIBRATOR_SERVICE);
+    if VibratorService <> nil then
+    begin
+      var Vibrator := TJVibrator.Wrap((VibratorService as ILocalObject).GetObjectID);
+      if (Vibrator <> nil) and
+         (Vibrator.hasVibrator) then  // Verifica se tem permissão/vibrador
+        Vibrator.vibrate(_duracao);
+    end;
+  except
+    on E: Exception do
+      // Log silencioso - vibração não é crítica
+      ;
+  end;
+  {$ENDIF}
+
+  {$IFDEF IOS}
+  AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
   {$ENDIF}
 end;
 
-function CacheParaBmp(const _nome: String): FMX.Graphics.TBitmap;
+function RecursoParaBmp(const _recurso: String): FMX.Graphics.TBitmap;
 begin
-  // Carrega recurso embutido no sistema
-  var _stream := TResourceStream.Create(HInstance, _nome, RT_RCDATA);
+  Result := nil;
+  var Stream: TResourceStream := nil;
   try
-    Result := FMX.Graphics.TBitmap.Create;
-    Result.LoadFromStream(_stream);
+    try
+      // Tenta criar o stream do recurso
+      Stream := TResourceStream.Create(HInstance, _recurso, RT_RCDATA);
+
+      // Cria o bitmap depois que o stream foi criado com sucesso
+      Result := FMX.Graphics.TBitmap.Create;
+      Result.LoadFromStream(Stream);
+    except
+      FreeAndNil(Result);
+      raise;
+    end;
   finally
-    FreeAndNil(_stream);
+    FreeAndNil(Stream);
   end;
 end;
 function URLParaBmp(const _url: String): FMX.Graphics.TBitmap;
@@ -155,13 +166,18 @@ begin
   var _httpclient := THTTPClient.Create;
   var _stream := TMemoryStream.Create;
   try
-    // Baixa a imagem da URL
-    _httpclient.Get(_url, _stream);
-    _stream.Position := 0;
+    try
+      // Baixa a imagem
+      _httpclient.Get(_url, _stream);
+      _stream.Position := 0;
 
-    // Cria e carrega o bitmap
-    Result := FMX.Graphics.TBitmap.Create;
-    Result.LoadFromStream(_stream);
+      // Cria e carrega o bitmap a partir do stream
+      Result := FMX.Graphics.TBitmap.Create;
+      Result.LoadFromStream(_stream);
+    except
+      FreeAndNil(Result);
+      raise;
+    end;
   finally
     FreeAndNil(_stream);
     FreeAndNil(_httpclient);
@@ -169,63 +185,74 @@ begin
 end;
 function Base64ParaBmp(const _img: String): FMX.Graphics.TBitmap;
 begin
-  Result := FMX.Graphics.TBitmap.Create;
+  Result := nil;
 
   var _inputstream := TStringStream.Create(_img);
-  var _outputstream := TMemoryStream.Create;
+  var _stream := TMemoryStream.Create;
   try
-    // Decodifica Base64 para stream binário
-    TNetEncoding.Base64.Decode(_inputstream, _outputstream);
+    try
+      // Decodifica Base64 para stream binário
+      TNetEncoding.Base64.Decode(_inputstream, _stream);
+      _stream.Position := 0;
 
-    // Volta ao início do stream para leitura
-    _outputstream.Position := 0;
-
-    // Carrega o bitmap a partir do stream
-    Result.LoadFromStream(_outputstream);
+      // Cria e carrega o bitmap a partir do stream
+      Result := FMX.Graphics.TBitmap.Create;
+      Result.LoadFromStream(_stream);
+    except
+      FreeAndNil(Result);
+      raise;
+    end;
   finally
+    FreeAndNil(_stream);
     FreeAndNil(_inputstream);
-    FreeAndNil(_outputstream);
   end;
 end;
 {$ENDIF}
 
-function VelocidadeParaDuracao(const _velociade: Single; const _inicioX, _inicioY, _fimX, _fimY: Single): Single;
+function VelocidadeParaDuracao(_velocidade: Single; const _inicio, _fim: TPointF): Single;
 begin
-  var _distanciaX := Abs(_fimX - _inicioX);
-  var _distanciaY := Abs(_fimY - _inicioY);
+  if _velocidade <= 0 then
+    _velocidade := 1;
 
-  Result := Sqrt(Sqr(_distanciaX) + Sqr(_distanciaY)) / _velociade;
+  Result := _inicio.Distance(_fim) / _velocidade;
 end;
-function BarraProgresso(const _valor, _total, _barra: Single): Single;
+function ProgressoBarra(_progresso: Single; const _total, _tamanhobarra: Single): Single;
 begin
-  // Calcula o valor do progresso
+  // Casos especiais
   if (_total <= 0) or
-     (_valor <= 0) then
-    Result := 0
-  else
-    Result := (_valor / _total) * _barra;
-end;
+     (_tamanhobarra <= 0) then
+    Exit(0);
 
+  // Limita valor entre 0 e Total
+  if _progresso < 0 then
+    _progresso := 0;
+  if _progresso > _total then
+    _progresso := _total;
+
+  // Calcula progresso
+  Result := (_progresso / _total) * _tamanhobarra;
+end;
 function TextoParaBase64(const _texto: String): String;
 begin
-  var Base64 := TBase64Encoding.Create(0, ''); // 0 = Sem quebra de linha
-  try
-    // Substitui caracteres especiais para arquivos INI
-    Result := Base64.Encode(_texto)
-      .Replace('+', '-')
-      .Replace('/', '!')
-      .Replace('=', '$');
-  finally
-    FreeAndNil(Base64);
-  end;
+  // Substitui caracteres especiais para arquivos INI
+  Result := TNetEncoding.Base64.Encode(_texto)
+    .Replace('+', '-')
+    .Replace('/', '!')
+    .Replace('=', '');
 end;
 function Base64ParaTexto(const _base64: String): String;
 begin
   // Substitui caracteres especiais para arquivos INI
-  Result := TNetEncoding.Base64.Decode(
-    _base64.Replace('-', '+')
-           .Replace('!', '/')
-           .Replace('$', '='));
+  var TextoBase64 := _base64
+    .Replace('-', '+')
+    .Replace('!', '/');
+
+  // Restaura padding para múltiplo de 4
+  var Padding := Length(TextoBase64) mod 4;
+  if Padding > 0 then
+    TextoBase64 := TextoBase64 + StringOfChar('=', 4 - Padding);
+
+  Result := TNetEncoding.Base64.Decode(TextoBase64);
 end;
 
 procedure SalvarIni(const _arquivo: String; _secao, _campo, _valor: String);
@@ -257,9 +284,9 @@ function LerIni(const _arquivo: String; _secao, _campo: String): String;
 begin
   Result := '';
 
-  // Codifica as strings
-  _secao := Base64ParaTexto(_secao);
-  _campo := Base64ParaTexto(_campo);
+  // Decodifica as strings
+  _secao := TextoParaBase64(_secao);
+  _campo := TextoParaBase64(_campo);
 
   // Determina o caminho de documentos e sua pasta
   {$IF defined(MSWINDOWS) or defined(LINUX)}
