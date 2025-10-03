@@ -12,7 +12,7 @@ Biblioteca Delphi/FireMonkey de funções utilitárias com suporte multiplatafor
 [![License](https://img.shields.io/badge/License-GPLv3-blue)](LICENSE)
 </div><br>
 
-## 💡 Funcionalidades
+## ⚡ Funcionalidades
 ```pascal
 function NomeProjeto: String;
 function ResolucaoNativa: TPoint;
