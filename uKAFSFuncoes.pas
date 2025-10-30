@@ -30,6 +30,7 @@ uses
   function URLParaBmp(const _url: String): FMX.Graphics.TBitmap;
   function Base64ParaBmp(const _img: String): FMX.Graphics.TBitmap;
   {$ENDIF}
+  function DateTimeToUnixMS: Int64;
   function VelocidadeParaDuracao(_velocidade: Single; const _inicio, _fim: TPointF): Single;
   function ProgressoBarra(_progresso: Single; const _total, _tamanhobarra: Single): Single;
   function TextoParaBase64(const _texto: String): String;
@@ -209,6 +210,10 @@ begin
 end;
 {$ENDIF}
 
+function DateTimeToUnixMS: Int64;
+begin
+  Result := Round((Now - UnixDateDelta) * MSecsPerDay);
+end;
 function VelocidadeParaDuracao(_velocidade: Single; const _inicio, _fim: TPointF): Single;
 begin
   if _velocidade <= 0 then
