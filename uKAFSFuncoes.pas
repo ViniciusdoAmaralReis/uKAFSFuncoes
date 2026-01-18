@@ -8,7 +8,7 @@ uses
   System.NetEncoding, System.SysUtils, System.Threading, System.Types,
   IdIPWatch, IdStack
   {$IFNDEF CONSOLE}
-  , FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Platform
+  , FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Media, FMX.Platform
   {$ENDIF}
   {$IFDEF MSWINDOWS}
   , Winapi.ShellAPI, Winapi.Windows
@@ -29,14 +29,15 @@ uses
   function RecursoParaBmp(const _recurso: String): FMX.Graphics.TBitmap;
   function URLParaBmp(const _url: String): FMX.Graphics.TBitmap;
   function Base64ParaBmp(const _img: String): FMX.Graphics.TBitmap;
+  function RecursoParaAudio(_nome: String): TMediaPlayer;
   {$ENDIF}
   function DateTimeToUnixMS: Int64;
   function VelocidadeParaDuracao(_velocidade: Single; const _inicio, _fim: TPointF): Single;
   function ProgressoBarra(_progresso: Single; const _total, _tamanhobarra: Single): Single;
   function TextoParaBase64(const _texto: String): String;
   function Base64ParaTexto(const _base64: String): String;
-  procedure SalvarIni(const _arquivo: String; _secao, _campo, _valor: String);
-  function LerIni(const _arquivo: String; _secao, _campo: String): String;
+  procedure SalvarIni(const _codificar: Boolean; const _arquivo: String; _secao, _campo, _valor: String);
+  function LerIni(const _codificar: Boolean; const _arquivo: String; _secao, _campo: String): String;
   function IPPrivado: String;
   function IPPublico: String;
 
@@ -208,6 +209,28 @@ begin
     FreeAndNil(_inputstream);
   end;
 end;
+function RecursoParaAudio(_nome: String): TMediaPlayer;
+begin
+  var _diretorio := System.IOUtils.TPath.GetDocumentsPath + PathDelim + 'audio';
+  if not TDirectory.Exists(_diretorio) then
+    ForceDirectories(_diretorio);
+  var _arquivo := System.IOUtils.TPath.Combine(_diretorio, _nome+'.mp3');
+
+  if not TFile.Exists(_arquivo) then
+  begin
+    var ResStream := TResourceStream.Create(HInstance, PChar(_nome), RT_RCDATA);
+    try
+      ResStream.SaveToFile(_arquivo);
+    finally
+      ResStream.Free;
+    end;
+  end;
+
+  var MediaPlayer := TMediaPlayer.Create(nil);
+  MediaPlayer.FileName := _arquivo;
+  Result := MediaPlayer;
+end;
+
 {$ENDIF}
 
 function DateTimeToUnixMS: Int64;
@@ -260,12 +283,15 @@ begin
   Result := TNetEncoding.Base64.Decode(TextoBase64);
 end;
 
-procedure SalvarIni(const _arquivo: String; _secao, _campo, _valor: String);
+procedure SalvarIni(const _codificar: Boolean; const _arquivo: String; _secao, _campo, _valor: String);
 begin
   // Codifica as strings
-  _secao := TextoParaBase64(_secao);
-  _campo := TextoParaBase64(_campo);
-  _valor := TextoParaBase64(_valor);
+  if _codificar then
+  begin
+    _secao := TextoParaBase64(_secao);
+    _campo := TextoParaBase64(_campo);
+    _valor := TextoParaBase64(_valor);
+  end;
 
   // Determina o caminho e cria uma pasta caso não exista
   {$IF defined(MSWINDOWS) or defined(LINUX)}
@@ -285,13 +311,16 @@ begin
     FreeAndNil(_ini);
   end;
 end;
-function LerIni(const _arquivo: String; _secao, _campo: String): String;
+function LerIni(const _codificar: Boolean; const _arquivo: String; _secao, _campo: String): String;
 begin
   Result := '';
 
   // Decodifica as strings
-  _secao := TextoParaBase64(_secao);
-  _campo := TextoParaBase64(_campo);
+  if _codificar then
+  begin
+    _secao := TextoParaBase64(_secao);
+    _campo := TextoParaBase64(_campo);
+  end;
 
   // Determina o caminho de documentos e sua pasta
   {$IF defined(MSWINDOWS) or defined(LINUX)}
@@ -308,7 +337,10 @@ begin
 
     // Decodifica caso não seja vazio
     if _valor <> '' then
-      Result := Base64ParaTexto(_valor);
+      if _codificar then
+        Result := Base64ParaTexto(_valor)
+      else
+        Result := _valor;
   finally
     FreeAndNil(_ini);
   end;
