@@ -8,7 +8,7 @@ uses
   System.NetEncoding, System.SysUtils, System.Threading, System.Types,
   IdIPWatch, IdStack
   {$IFNDEF CONSOLE}
-  , FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Media, FMX.Platform
+  , FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Media, FMX.Platform, System.Skia
   {$ENDIF}
   {$IFDEF MSWINDOWS}
   , Winapi.ShellAPI, Winapi.Windows
@@ -29,6 +29,7 @@ uses
   function RecursoParaBmp(const _recurso: String): FMX.Graphics.TBitmap;
   function URLParaBmp(const _url: String): FMX.Graphics.TBitmap;
   function Base64ParaBmp(const _img: String): FMX.Graphics.TBitmap;
+  function BmpParaSkImage(const _bmp: FMX.Graphics.TBitmap): ISkImage;
   function RecursoParaAudio(_nome: String): TMediaPlayer;
   {$ENDIF}
   function DateTimeToUnixMS: Int64;
@@ -207,6 +208,19 @@ begin
   finally
     FreeAndNil(_stream);
     FreeAndNil(_inputstream);
+  end;
+end;
+function BmpParaSkImage(const _bmp: FMX.Graphics.TBitmap): ISkImage;
+begin
+  Result := nil;
+
+  var _data: TBitmapData;
+  if _bmp.Map(TMapAccess.Read, _data) then
+  try
+    var _info := TSkImageInfo.Create(_bmp.Width, _bmp.Height);
+    Result := TSkImage.MakeRasterCopy(_info, _data.Data, _data.Pitch);
+  finally
+    _bmp.Unmap(_data);
   end;
 end;
 function RecursoParaAudio(_nome: String): TMediaPlayer;
