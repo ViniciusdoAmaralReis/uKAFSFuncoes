@@ -244,7 +244,6 @@ begin
   MediaPlayer.FileName := _arquivo;
   Result := MediaPlayer;
 end;
-
 {$ENDIF}
 
 function DateTimeToUnixMS: Int64;
