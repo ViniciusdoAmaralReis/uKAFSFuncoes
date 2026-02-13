@@ -32,6 +32,8 @@ uses
   function BmpParaSkImage(const _bmp: FMX.Graphics.TBitmap): ISkImage;
   function RecursoParaAudio(_nome: String): TMediaPlayer;
   {$ENDIF}
+
+  function ContemNoArrayInteger(const _valor: Integer; const _array: array of Integer): Boolean;
   function DateTimeToUnixMS: Int64;
   function VelocidadeParaDuracao(_velocidade: Single; const _inicio, _fim: TPointF): Single;
   function ProgressoBarra(_progresso: Single; const _total, _tamanhobarra: Single): Single;
@@ -246,6 +248,14 @@ begin
 end;
 {$ENDIF}
 
+function ContemNoArrayInteger(const _valor: Integer; const _array: array of Integer): Boolean;
+begin
+  for var I := Low(_array) to High(_array) do
+    if _array[I] = _valor then
+      Exit(True);
+
+  Result := False;
+end;
 function DateTimeToUnixMS: Int64;
 begin
   Result := Round((Now - UnixDateDelta) * MSecsPerDay);
