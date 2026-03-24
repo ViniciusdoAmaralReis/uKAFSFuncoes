@@ -3,7 +3,7 @@ unit uKAFSFuncoes;
 interface
 
 uses
-  System.Classes, System.IniFiles, System.IOUtils, System.Math,
+  System.Classes, System.IniFiles, System.IOUtils, System.Math,        System.StrUtils,
   System.Net.HttpClient, System.Net.HttpClientComponent, System.Net.URLClient,
   System.NetEncoding, System.SysUtils, System.Threading, System.Types,
   IdIPWatch, IdStack
@@ -35,6 +35,7 @@ uses
 
   function ContemNoArrayInteger(const _valor: Integer; const _array: array of Integer): Boolean;
   function DateTimeToUnixMS: Int64;
+  function SegundosParaString(_valor: Int64): string;
   function VelocidadeParaDuracao(_velocidade: Single; const _inicio, _fim: TPointF): Single;
   function ProgressoBarra(_progresso: Single; const _total, _tamanhobarra: Single): Single;
   function TextoParaBase64(const _texto: String): String;
@@ -259,6 +260,25 @@ end;
 function DateTimeToUnixMS: Int64;
 begin
   Result := Round((Now - UnixDateDelta) * MSecsPerDay);
+end;
+function SegundosParaString(_valor: Int64): string;
+begin
+
+  if _valor < 0 then _valor := 0;
+
+  var _dias     := _valor div 86400;
+  _valor        := _valor mod 86400;
+  var _horas    := _valor div 3600;
+  _valor        := _valor mod 3600;
+  var _minutos  := _valor div 60;
+  var _segundos := _valor mod 60;
+
+  // Formata a string no padrão: 99 D, 99:99:99
+  if         _dias > 0 then Result := Format('%d d, %.2d:%.2d:%.2d', [_dias, _horas, _minutos, _segundos])
+  else if   _horas > 0 then Result := Format('%.2d:%.2d:%.2d', [_horas, _minutos, _segundos])
+  else if _minutos > 0 then Result := Format('%.2d:%.2d', [_minutos, _segundos])
+  else                      Result := Format('%.2d', [_segundos]);
+
 end;
 function VelocidadeParaDuracao(_velocidade: Single; const _inicio, _fim: TPointF): Single;
 begin
