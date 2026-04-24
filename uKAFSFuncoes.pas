@@ -33,6 +33,7 @@ uses
   function RecursoParaAudio(_nome: String): TMediaPlayer;
   {$ENDIF}
 
+  function TamanhoArquivo(_arquivo: String): Int64;
   function ContemNoArrayInteger(const _valor: Integer; const _array: array of Integer): Boolean;
   function DateTimeToUnixMS: Int64;
   function SegundosParaString(_valor: Int64): string;
@@ -249,6 +250,12 @@ begin
 end;
 {$ENDIF}
 
+function  TamanhoArquivo(_arquivo: String): Int64;
+begin
+
+  Result := TFile.GetSize(_arquivo);
+
+end;
 function ContemNoArrayInteger(const _valor: Integer; const _array: array of Integer): Boolean;
 begin
   for var I := Low(_array) to High(_array) do
