@@ -33,6 +33,7 @@ uses
   function  BmpParaSkimage(const _bmp: FMX.Graphics.TBitmap): ISkImage;
   function  RecursoParaAudio(_nome: String): TMediaPlayer;
   {$ENDIF}
+  function  BytesParaString(const _bytes: Int64): string;
   function  TamanhoArquivo(_arquivo: String): Int64;
   function  ContemNoArrayInteger(const _valor: Integer; const _array: array of Integer): Boolean;
   function  DateTimeToUnixMS: Int64;
@@ -293,6 +294,24 @@ begin
 
 end;
 {$ENDIF}
+
+function BytesParaString(const _bytes: Int64): string;
+const
+  KB = 1024;
+  MB = KB * 1024;
+  GB = MB * 1024;
+begin
+
+  if _bytes >= GB then
+    Result := FormatFloat('0.##', _bytes / GB) + ' GB'
+  else if _bytes >= MB then
+    Result := FormatFloat('0.##', _bytes / MB) + ' MB'
+  else if _bytes >= KB then
+    Result := FormatFloat('0.##', _bytes / KB) + ' KB'
+  else
+    Result := IntToStr(_bytes) + ' B';
+
+end;
 
 function  TamanhoArquivo(_arquivo: String): Int64;
 begin
