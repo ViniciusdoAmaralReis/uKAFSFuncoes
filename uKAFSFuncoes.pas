@@ -31,7 +31,7 @@ uses
   function  URLParaBmp(const _url: String): FMX.Graphics.TBitmap;
   function  Base64ParaBmp(const _img: String): FMX.Graphics.TBitmap;
   function  BmpParaSkimage(const _bmp: FMX.Graphics.TBitmap): ISkImage;
-  function  RecursoParaAudio(_nome: String): TMediaPlayer;
+  function  RecursoParaAudio(const _nomeSistema, _nomeArquivo: String): TMediaPlayer;
   {$ENDIF}
   function  BytesParaString(const _bytes: Int64): string;
   function  TamanhoArquivo(_arquivo: String): Int64;
@@ -262,20 +262,22 @@ begin
   end;
 
 end;
-function  RecursoParaAudio(_nome: String): TMediaPlayer;
+function  RecursoParaAudio(const _nomeSistema, _nomeArquivo: String): TMediaPlayer;
 begin
 
-  var _diretorio := System.IOUtils.TPath.GetDocumentsPath + PathDelim + 'audio';
+  //var _diretorio := System.IOUtils.TPath.GetDocumentsPath + PathDelim + 'KAFSGroup';
+  var _diretorio := System.IOUtils.TPath.Combine(System.IOUtils.TPath.GetDocumentsPath, 'KAFSGroup');
+  _diretorio := System.IOUtils.TPath.Combine(_diretorio, _nomeSistema);
   if not TDirectory.Exists(_diretorio) then
     ForceDirectories(_diretorio);
-  var _arquivo := System.IOUtils.TPath.Combine(_diretorio, _nome+'.mp3');
+  var _arquivo := System.IOUtils.TPath.Combine(_diretorio, _nomeArquivo+'.mp3');
 
   //----------------------------------------------------------------------------
 
   if not TFile.Exists(_arquivo) then
   begin
 
-    var _resStream := TResourceStream.Create(HInstance, PChar(_nome), RT_RCDATA);
+    var _resStream := TResourceStream.Create(HInstance, PChar(_nomeArquivo), RT_RCDATA);
     try
 
       _resStream.SaveToFile(_arquivo);
