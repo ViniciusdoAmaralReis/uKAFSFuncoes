@@ -139,7 +139,7 @@ begin
     if _vibratorService <> nil then
     begin
 
-      var _vibrator := TJVibrator.Wrap((VibratorService as ILocalObject).GetObjectID);
+      var _vibrator := TJVibrator.Wrap((_vibratorService as ILocalObject).GetObjectID);
       if (_vibrator <> nil) and (_vibrator.hasVibrator) then  // Verifica se tem permissão/vibrador
         _vibrator.vibrate(_duracao);
 
