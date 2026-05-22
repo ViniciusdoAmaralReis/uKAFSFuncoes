@@ -31,7 +31,7 @@ uses
   function  URLParaBmp(const _url: String): FMX.Graphics.TBitmap;
   function  Base64ParaBmp(const _img: String): FMX.Graphics.TBitmap;
   function  BmpParaSkimage(const _bmp: FMX.Graphics.TBitmap): ISkImage;
-  function  RecursoParaAudio(const _nomeSistema, _nomeArquivo: String): TMediaPlayer;
+  function  RecursoParaAudio(const _nomePasta, _nomeSistema, _nomeArquivo: String): TMediaPlayer;
   {$ENDIF}
   function  BytesParaString(const _bytes: Int64): string;
   function  TamanhoArquivo(_arquivo: String): Int64;
@@ -262,11 +262,10 @@ begin
   end;
 
 end;
-function  RecursoParaAudio(const _nomeSistema, _nomeArquivo: String): TMediaPlayer;
+function  RecursoParaAudio(const _nomePasta, _nomeSistema, _nomeArquivo: String): TMediaPlayer;
 begin
 
-  //var _diretorio := System.IOUtils.TPath.GetDocumentsPath + PathDelim + 'KAFSGroup';
-  var _diretorio := System.IOUtils.TPath.Combine(System.IOUtils.TPath.GetDocumentsPath, 'KAFSGroup');
+  var _diretorio := System.IOUtils.TPath.Combine(System.IOUtils.TPath.GetDocumentsPath, _nomePasta);
   _diretorio := System.IOUtils.TPath.Combine(_diretorio, _nomeSistema);
   if not TDirectory.Exists(_diretorio) then
     ForceDirectories(_diretorio);
