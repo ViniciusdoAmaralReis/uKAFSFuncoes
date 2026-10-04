@@ -7,21 +7,21 @@ uses
   System.Net.HttpClient, System.Net.HttpClientComponent, System.Net.URLClient,
   System.NetEncoding, System.SysUtils, System.Types,
   IdIPWatch, IdStack
-  {$IFNDEF CONSOLE}
+{$IFNDEF CONSOLE}
   , System.Skia,
   FMX.Forms, FMX.Graphics, FMX.Media, FMX.Platform
-  {$ENDIF}
-  {$IFDEF MSWINDOWS}
+{$ENDIF}
+{$IFDEF MSWINDOWS}
   , Winapi.ShellAPI, Winapi.Windows
-  {$ENDIF}
-  {$IFDEF ANDROID}
+{$ENDIF}
+{$IFDEF ANDROID}
   , Androidapi.Helpers, Androidapi.JNI.GraphicsContentViewText,
   Androidapi.JNI.Os, Androidapi.JNIBridge
-  {$ENDIF}
+{$ENDIF}
   ;
 
   function  NomeProjeto: String;
-  {$IFNDEF CONSOLE}
+{$IFNDEF CONSOLE}
   function  ResolucaoNativa: TPoint;
   function  AnguloRotacao(const _centroOrigem, _centroAlvo: TPointF): Single;
   function  Distancia(const _centroOrigem, _centroAlvo: TPointF): Single;
@@ -32,7 +32,7 @@ uses
   function  Base64ParaBmp(const _img: String): FMX.Graphics.TBitmap;
   function  BmpParaSkimage(const _bmp: FMX.Graphics.TBitmap): ISkImage;
   function  RecursoParaAudio(const _nomePasta, _nomeSistema, _nomeArquivo: String): TMediaPlayer;
-  {$ENDIF}
+{$ENDIF}
   function  BytesParaString(const _bytes: Int64): string;
   function  TamanhoArquivo(_arquivo: String): Int64;
   function  ContemNoArrayInteger(const _valor: Integer; const _array: array of Integer): Boolean;
